@@ -1,0 +1,47 @@
+{
+  "last_run": "2026-06-24T19:46:05.876462+00:00",
+  "known_ids": [
+    "bitcoin",
+    "ethereum"
+  ],
+  "tokens": [
+    {
+      "name": "Bitcoin",
+      "ticker": "BTC",
+      "category": "Crypto",
+      "gecko_id": "bitcoin",
+      "sb_price": null,
+      "sb_variation_24h": null,
+      "current_price": null,
+      "market_cap": null,
+      "volume_24h": null,
+      "change_24h": 3.5,
+      "is_new": false,
+      "trend_score": 72,
+      "reddit_mentions": 320,
+      "youtube_mentions": 28,
+      "analytic_score": 12.5,
+      "social_score": 95.2,
+      "final_score": 63.61
+    },
+    {
+      "name": "Ethereum",
+      "ticker": "ETH",
+      "category": "Crypto",
+      "gecko_id": "ethereum",
+      "sb_price": null,
+      "sb_variation_24h": null,
+      "current_price": null,
+      "market_cap": null,
+      "volume_24h": null,
+      "change_24h": null,
+      "is_new": false,
+      "trend_score": 0.0,
+      "reddit_mentions": 0,
+      "youtube_mentions": 0,
+      "analytic_score": 0.0,
+      "social_score": 0.0,
+      "final_score": 75.5
+    }
+  ]
+}
