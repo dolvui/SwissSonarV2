@@ -29,11 +29,11 @@ from utils.cache import (
 from ui.token_detail import show_token_detail
 from ui.pdf_export import build_pdf
 
-
+# .stApp { background-color: #0f1117; }
 # ── CSS theming ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .stApp { background-color: #0f1117; }
+    
     .block-container { padding-top: 1.5rem; }
     h1, h2, h3 { color: #00d4ff !important; }
     .stMetric label { color: #888 !important; font-size: 0.8rem !important; }
