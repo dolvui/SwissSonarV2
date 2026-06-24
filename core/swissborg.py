@@ -14,6 +14,9 @@ import time
 import requests
 from bs4 import BeautifulSoup
 from core.token import Token
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 
 _URL = "https://swissborg.com/fr/supported-assets"
 
@@ -69,6 +72,17 @@ def _clean_pct(raw: str) -> float:
     except ValueError:
         return 0.0
 
+def get_driver():
+    chrome_options = Options()
+    chrome_options.binary_location = "/usr/bin/chromium"
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+
+    return webdriver.Chrome(
+        service=Service("/usr/bin/chromedriver"),
+        options=chrome_options
+    )
 
 def fetch_swissborg_tokens() -> tuple[list[Token], bool]:
     """
@@ -79,9 +93,15 @@ def fetch_swissborg_tokens() -> tuple[list[Token], bool]:
     used_fallback = False
 
     try:
-        resp = requests.get(_URL, headers=_HEADERS, timeout=15)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
+        driver = get_driver()
+        driver.get("https://swissborg.com/fr/supported-assets")
+        time.sleep(3)
+        html = driver.page_source
+        driver.quit()
+
+        #resp = requests.get(_URL, headers=_HEADERS, timeout=15)
+        #resp.raise_for_status()
+        soup = BeautifulSoup(html, "html.parser")
 
         # --- Strategy A: find a <table> ---
         table = soup.find("table")
@@ -125,3 +145,4 @@ def fetch_swissborg_tokens() -> tuple[list[Token], bool]:
         ]
 
     return tokens, used_fallback
+print(fetch_swissborg_tokens())
