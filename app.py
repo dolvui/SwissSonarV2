@@ -33,7 +33,7 @@ from ui.pdf_export import build_pdf
 # ── CSS theming ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .stApp { background-color: #cbc2a5; }
+    .stApp { background-color: #464f6c; }
     .block-container { padding-top: 1.5rem; }
     h1, h2, h3 { color: #00d4ff !important; }
     .stMetric label { color: #888 !important; font-size: 0.8rem !important; }
