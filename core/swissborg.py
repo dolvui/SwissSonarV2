@@ -136,7 +136,7 @@ def fetch_swissborg_tokens() -> tuple[list[Token], bool]:
 
     except Exception as e:
         print(f"[SwissBorg] Scraping error: {e}")
-        return e, True
+
     if not tokens:
         used_fallback = True
         tokens = [
