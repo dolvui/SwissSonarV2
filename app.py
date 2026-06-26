@@ -85,7 +85,7 @@ def run_full_pipeline(skip_social: bool = False) -> list:
         tokens, used_fallback = fetch_swissborg_tokens()
         if used_fallback:
             st.warning("⚠️ SwissBorg scraping failed — using static fallback list.")
-        st.write(f"✅ {len(tokens)} tokens found.")
+        st.write(f"✅ {tokens} tokens found.")
 
         # ── 2. CoinGecko IDs ──────────────────────────────────────────────────
         status.update(label="🔍 Resolving CoinGecko IDs…")
