@@ -224,3 +224,34 @@ else:
         name, gid, tick, d = st.session_state["show_analysis"]
         # L'analyse individuelle est légère (1 seul appel CoinGecko) → OK dans l'UI
         show_token_detail(name, gid, tick, days=d)
+
+
+# ── Predictions section (ajout en bas de app.py) ──────────────────────────────
+st.divider()
+st.subheader("📈 Prédictions 7 jours")
+
+from core.prediction import predict_top_tokens
+from core.market_data import fetch_token_history
+from core.analysis import analyse_token as _analyse
+from ui.prediction_panel import show_predictions
+
+if st.button("🔮 Générer prédictions Top 15", help="Fetch l'historique des 15 premiers tokens et calcule les prédictions"):
+    top_tokens = tokens[:15]
+    reports = {}
+    pred_bar = st.progress(0, text="Fetching histories…")
+    for i, t in enumerate(top_tokens):
+        if t.gecko_id:
+            try:
+                cg = fetch_token_history(t.gecko_id, days=60)
+                reports[t.gecko_id] = _analyse(cg)
+            except Exception:
+                reports[t.gecko_id] = {}
+        pred_bar.progress((i+1)/len(top_tokens), text=f"{t.name}…")
+        import time as _t; _t.sleep(1.3)
+    pred_bar.empty()
+    preds = predict_top_tokens(top_tokens, reports, top_n=15)
+    st.session_state["predictions"] = preds
+    st.rerun()
+
+if st.session_state.get("predictions"):
+    show_predictions(st.session_state["predictions"])
