@@ -1,20 +1,23 @@
 # 📊 Crypto Dashboard
 
-A Streamlit dashboard for tracking SwissBorg-listed crypto tokens with social trend signals, 
-technical analysis, and a ranked scoring system.
+Dashboard Streamlit pour tracker les tokens SwissBorg avec signaux sociaux,
+analyse technique et scoring composite.
 
-## Features
+## Architecture du workflow
 
-- **SwissBorg token list** — scraped automatically (with static fallback)
-- **CoinGecko market data** — price, market cap, 24h volume & change, batched API calls
-- **Social signals** — Google Trends, Reddit mentions, YouTube video count (last 24h)
-- **Technical analysis** — RSI, Bollinger Bands, slope/R², price-volume correlation
-- **Composite score [0–100]** — analytic (35%) + social (35%) + momentum (20%) + new-token bonus (10%)
-- **New token detection** — flags tokens appearing on SwissBorg for the first time
-- **PDF export** — cover page, Top 10 bar chart, full ranked token table
-- **Local JSON cache** — data persists between sessions, TTL = 24h (no database needed)
+```
+Machine locale                      Git / Streamlit Cloud
+──────────────────────────────      ─────────────────────
+python refresh.py          ──→      git push cache.json
+  ↓ pas de timeout                    ↓ app lit le cache
+  ↓ tourne en fond                    ↓ affichage immédiat
+  └─ écrit cache.json
+```
 
-## Setup
+L'app Streamlit ne fait **jamais** tourner le pipeline lourd.
+Elle lit uniquement `cache.json` et affiche.
+
+## Installation
 
 ```bash
 git clone <repo>
@@ -22,68 +25,112 @@ cd crypto_dashboard
 pip install -r requirements.txt
 ```
 
-### API Keys
+### Clés API — `.streamlit/secrets.toml`
 
-Copy `.streamlit/secrets.toml.template` → `.streamlit/secrets.toml` and fill in:
+Copier `.streamlit/secrets.toml.template` → `.streamlit/secrets.toml` :
 
-| Key | Where to get it |
-|-----|----------------|
-| `reddit.client_id` + `reddit.client_secret` | https://www.reddit.com/prefs/apps → create a "script" app |
-| `reddit.user_agent` | Any string, e.g. `crypto-dashboard/1.0 by u/yourname` |
-| `youtube.api_key` | https://console.cloud.google.com → YouTube Data API v3 |
+```toml
+[reddit]
+client_id     = "..."   # reddit.com/prefs/apps → créer une app "script"
+client_secret = "..."
+user_agent    = "crypto-dashboard/1.0 by u/ton_pseudo"
 
-> Google Trends (pytrends) requires **no API key**.
+[youtube]
+api_key = "..."         # console.cloud.google.com → YouTube Data API v3
+```
 
-## Run
+> Google Trends (pytrends) ne nécessite **aucune clé**.
+
+## Mise à jour du cache (local)
+
+```bash
+# Rapide (~2 min) — market data + analytic scores, sans social
+python refresh.py --no-social
+
+# Complet (~10 min) — tout inclus
+python refresh.py
+
+# Market data seulement (~30 sec)
+python refresh.py --no-social --no-analytic
+
+# Puis pousser le cache
+git add cache.json
+git commit -m "chore: refresh cache $(date +%Y-%m-%d)"
+git push
+```
+
+Streamlit Cloud récupère automatiquement le nouveau `cache.json`
+au prochain chargement de page (ou via le bouton **Reload cache**).
+
+## Lancer l'app
 
 ```bash
 streamlit run app.py
 ```
 
-## Architecture
+## Structure des fichiers
 
 ```
 crypto_dashboard/
-├── app.py                      # Streamlit entry point
+├── app.py                      # Streamlit (lecture cache uniquement)
+├── refresh.py                  # Script local de mise à jour
 ├── requirements.txt
-├── cache.json                  # Auto-generated local cache
+├── cache.json                  # Généré par refresh.py — à commiter
 │
 ├── core/
-│   ├── token.py                # Token dataclass
-│   ├── swissborg.py            # SwissBorg scraper (requests + BS4)
-│   ├── market_data.py          # CoinGecko API wrapper
+│   ├── token.py                # Dataclass Token
+│   ├── swissborg.py            # Scraper SwissBorg (requests + BS4)
+│   ├── market_data.py          # CoinGecko API
 │   ├── social_trends.py        # Google Trends + Reddit + YouTube
-│   ├── analysis.py             # Technical analysis (RSI, BB, slope…)
-│   └── scoring.py              # Final score computation
+│   ├── analysis.py             # Analyse technique (RSI, BB, slope…)
+│   └── scoring.py              # Score final [0–100]
 │
 ├── ui/
-│   ├── token_detail.py         # Deep-analysis panel (Plotly charts)
-│   └── pdf_export.py           # PDF report builder (reportlab)
+│   ├── token_detail.py         # Panel analyse détaillée (Plotly)
+│   └── pdf_export.py           # Export PDF (reportlab)
 │
 └── utils/
-    └── cache.py                # JSON cache read/write/TTL
+    └── cache.py                # Lecture/écriture cache JSON (TTL 24h)
 ```
 
-## Scores explained
+## Scores
 
-| Component | Weight | What it measures |
-|-----------|--------|-----------------|
-| Analytic score | 35% | Price delta, volume volatility, slope fit |
-| Social score | 35% | Google Trends + Reddit + YouTube signals |
-| Momentum | 20% | 24h price change |
-| New-token bonus | +10% | Token newly listed on SwissBorg |
+| Composante | Poids | Ce que ça mesure |
+|------------|-------|-----------------|
+| Analytic   | 35%   | Delta prix, volatilité volume, slope, R² |
+| Social     | 35%   | Google Trends + Reddit + YouTube |
+| Momentum   | 20%   | Variation 24h |
+| Bonus new  | +10%  | Token nouvellement listé sur SwissBorg |
 
-## Buttons
+## Automatisation (optionnel)
 
-| Button | Action |
-|--------|--------|
-| 🔄 Full Refresh | Fetch SwissBorg list + market data + social signals (slow, ~1–2 min) |
-| ⚡ Quick Refresh | Market data only — no social API calls (fast, ~10 sec) |
-| 📄 Export PDF | Download ranked report PDF |
-| 🔎 Analyse | Deep-dive chart + indicators for the selected token |
+Pour éviter de lancer `refresh.py` manuellement, tu peux créer
+un **GitHub Action** qui tourne toutes les 24h :
 
-## Notes
+```yaml
+# .github/workflows/refresh.yml
+name: Refresh cache
+on:
+  schedule:
+    - cron: '0 6 * * *'   # tous les jours à 6h UTC
+  workflow_dispatch:
 
-- CoinGecko free tier: ~30 req/min. The pipeline batches calls and sleeps between chunks.
-- SwissBorg's page is JS-rendered; if BS4 yields 0 tokens, the static fallback list is used automatically.
-- Cache TTL is 24h (`utils/cache.py → TTL_HOURS`). Change to suit your update frequency.
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install -r requirements.txt
+      - run: python refresh.py --no-social
+        env:
+          REDDIT_CLIENT_ID:     ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USER_AGENT:    "crypto-dashboard/1.0"
+          GOOGLE_KEY:           ${{ secrets.GOOGLE_KEY }}
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: auto-refresh cache"
+          file_pattern: cache.json
+```

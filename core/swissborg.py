@@ -74,13 +74,13 @@ def _clean_pct(raw: str) -> float:
 
 def get_driver():
     chrome_options = Options()
-    chrome_options.binary_location = "/usr/bin/chromium"
+    chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
 
     return webdriver.Chrome(
-        service=Service("/usr/bin/chromedriver"),
+        #service=Service("/usr/bin/chromedriver"),
         options=chrome_options
     )
 
