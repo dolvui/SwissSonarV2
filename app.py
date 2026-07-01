@@ -26,7 +26,7 @@ st.markdown("""
     .stApp { background-color: #0f1117; }
     .block-container { padding-top: 1.5rem; }
     h1, h2, h3 { color: #00d4ff !important; }
-    .stMetric label { color: #888 !important; font-size: 0.8rem !important; }
+    .stMetric label { color: #ffffff !important; font-size: 0.8rem !important; }
     .stMetric [data-testid="stMetricValue"] { color: #ffffff !important; font-size: 1.3rem !important; }
     div[data-testid="stDataFrame"] { border: 1px solid #1e2130; border-radius: 8px; }
 </style>
